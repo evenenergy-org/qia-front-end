@@ -1,0 +1,23 @@
+.operation-history-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.operation-history-button {
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #333;
+}
+
+.operation-history-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.operation-history-button:active {
+  color: #666;
+} 

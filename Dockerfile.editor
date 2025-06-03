@@ -1,0 +1,44 @@
+FROM node:18-alpine
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装 pnpm、pm2 和指定版本的 turbo
+RUN npm install -g pnpm@10.11.0 pm2 turbo@1.12.4
+
+# 复制所有源代码
+COPY . .
+
+# 安装依赖并构建
+RUN pnpm install
+RUN pnpm build --filter=qia-editor
+
+# 创建 pm2 配置文件
+RUN echo 'module.exports = { \
+  apps: [{ \
+    name: "qia-editor", \
+    cwd: "/app/apps/qia-editor", \
+    script: "pnpm", \
+    args: "start", \
+    env: { \
+      NODE_ENV: "production", \
+      PORT: "3003", \
+      HOST: "0.0.0.0" \
+    }, \
+    error_file: "/app/logs/err.log", \
+    out_file: "/app/logs/out.log", \
+    log_file: "/app/logs/combined.log", \
+    time: true, \
+    max_memory_restart: "1G", \
+    exp_backoff_restart_delay: 100 \
+  }] \
+}' > ecosystem.config.js
+
+# 创建日志目录
+RUN mkdir -p /app/logs
+
+# 暴露端口
+EXPOSE 3003
+
+# 使用 pm2 启动应用
+CMD ["pm2-runtime", "ecosystem.config.js"] 

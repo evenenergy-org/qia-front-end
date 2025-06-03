@@ -1,0 +1,19 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - /home/deployer/nginx/html:/home/deployer/nginx/html
+      - /home/deployer/nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /home/deployer/nginx/logs:/home/deployer/nginx/logs
+    restart: always
+    networks:
+      - qia-network
+
+networks:
+  qia-network:
+    name: qia-network
+    driver: bridge 

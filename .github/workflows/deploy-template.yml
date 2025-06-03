@@ -1,0 +1,114 @@
+name: Deploy Template
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Project to deploy'
+        required: true
+        type: choice
+        options:
+          - qia-editor
+          - qia-factory
+          - qia-platform
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/${{ github.event.inputs.project || 'qia-editor' }}/**'
+      - 'packages/jigi/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'apps/${{ github.event.inputs.project || 'qia-editor' }}/**'
+      - 'packages/jigi/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: ${{ github.event.inputs.project || 'qia-editor' }}
+      PORT: ${{ github.event.inputs.project == 'qia-editor' && '3003' || github.event.inputs.project == 'qia-factory' && '3004' || '3005' }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+        run_install: false
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: |
+        pnpm install
+
+    - name: Build workspace packages
+      run: |
+        pnpm build --filter=jigi
+
+    - name: Build project
+      run: |
+        pnpm build --filter=${{ env.PROJECT }}
+
+    - name: Prepare deployment files
+      run: |
+        # 创建部署目录
+        mkdir -p deploy
+        
+        # 复制必要的文件
+        cp -r apps/${{ env.PROJECT }}/.next deploy/
+        cp -r apps/${{ env.PROJECT }}/public deploy/
+        cp apps/${{ env.PROJECT }}/package.json deploy/
+        cp apps/${{ env.PROJECT }}/next.config.js deploy/
+        cp pnpm-lock.yaml deploy/
+        
+        # 复制 jigi 包
+        mkdir -p deploy/node_modules/jigi
+        cp -r packages/jigi/dist deploy/node_modules/jigi/
+        cp packages/jigi/package.json deploy/node_modules/jigi/
+        
+        # 创建部署包
+        cd deploy && tar -czf ../deploy.tar.gz .
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy to server
+      run: |
+        # 确保目标目录存在
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /home/deployer/${{ env.PROJECT }}"
+        
+        # 复制部署文件到服务器
+        scp -o StrictHostKeyChecking=no deploy.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/deployer/${{ env.PROJECT }}/
+        
+        # 在服务器上构建和运行Docker容器
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          cd /home/deployer/${{ env.PROJECT }} && \
+          tar -xzf deploy.tar.gz && \
+          docker build -t ${{ env.PROJECT }}:${{ github.sha }} . && \
+          docker stop ${{ env.PROJECT }} || true && \
+          docker rm ${{ env.PROJECT }} || true && \
+          docker run -d --name ${{ env.PROJECT }} --network qia-network -p ${{ env.PORT }}:${{ env.PORT }} ${{ env.PROJECT }}:${{ github.sha }} && \
+          docker image prune -f && \
+          rm -f deploy.tar.gz
+        " 

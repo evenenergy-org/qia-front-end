@@ -1,0 +1,29 @@
+{
+  "name": "qia-front-end",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:editor": "turbo run dev --filter=qia-editor",
+    "dev:factory": "turbo run dev --filter=qia-factory",
+    "dev:platform": "turbo run dev --filter=qia-platform",
+    "dev:jigi": "turbo run dev --filter=jigi",
+    "start": "turbo run start",
+    "start:editor": "turbo run start --filter=qia-editor",
+    "start:factory": "turbo run start --filter=qia-factory",
+    "start:platform": "turbo run start --filter=qia-platform",
+    "start:jigi": "turbo run start --filter=jigi",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "turbo": "^1.12.4",
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

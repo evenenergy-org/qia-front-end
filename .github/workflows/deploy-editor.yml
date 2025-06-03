@@ -1,0 +1,48 @@
+name: Deploy QIA Editor
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/qia-editor/**'
+      - 'packages/jigi/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'apps/qia-editor/**'
+      - 'packages/jigi/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT: qia-editor
+      PORT: 3003
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy to server
+      run: |
+        # 确保目标目录存在
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /home/deployer/${{ env.PROJECT }}"
+        
+        # 复制代码到服务器
+        rsync -avz --delete \
+          --exclude 'node_modules' \
+          --exclude '.git' \
+          --exclude '.next' \
+          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/deployer/${{ env.PROJECT }}/
+        
+        # 设置脚本权限并执行部署
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          cd /home/deployer/${{ env.PROJECT }} && \
+          chmod +x deploy.sh && \
+          ./deploy.sh
+        " 
