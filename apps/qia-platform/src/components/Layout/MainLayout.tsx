@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { Layout, Menu, theme, Button, Dropdown } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
@@ -10,15 +10,18 @@ import type { MenuProps } from 'antd';
 
 const { Header, Content, Sider } = Layout;
 
-export default function MainLayout({
+const MainLayout = memo(function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  
+  console.log('rrrrr',router)
   const pathname = usePathname();
   const { isAuthenticated, token, initialized, initialize, user, logout } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
+  const [defaultOpenKeys, setDefaultOpenKeys] = useState<string[]>([]);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -32,6 +35,14 @@ export default function MainLayout({
       router.replace('/login');
     }
   }, [initialized, isAuthenticated, router]);
+
+  useEffect(() => {
+    const parentMenu = menuItems.find(item =>
+      item.children?.some(child => child.path === pathname)
+    );
+    console.log('初始化展开')
+    setDefaultOpenKeys(parentMenu ? [parentMenu.path] : []);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -51,15 +62,38 @@ export default function MainLayout({
     },
   ];
 
+  const getMenuItems = (items: typeof menuItems) => {
+    return items.map(item => {
+      if (item.children) {
+        return {
+          key: item.path,
+          icon: <item.icon />,
+          label: item.label,
+          children: item.children.map(child => ({
+            key: child.path,
+            label: child.label,
+            onClick: () => router.push(child.path),
+          })),
+        };
+      }
+      return {
+        key: item.path,
+        icon: <item.icon />,
+        label: item.label,
+        onClick: () => router.push(item.path),
+      };
+    });
+  };
+
   if (!initialized || !isAuthenticated || !token) {
     return null;
   }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider 
-        trigger={null} 
-        collapsible 
+      <Sider
+        trigger={null}
+        collapsible
         collapsed={collapsed}
         style={{
           overflow: 'auto',
@@ -70,7 +104,7 @@ export default function MainLayout({
           bottom: 0,
         }}
       >
-        <div style={{ 
+        <div style={{
           height: '64px',
           margin: '16px',
           background: 'rgba(255, 255, 255, 0.2)',
@@ -79,18 +113,16 @@ export default function MainLayout({
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[pathname]}
-          items={menuItems.map(item => ({
-            key: item.path,
-            icon: <item.icon />,
-            label: item.label,
-            onClick: () => router.push(item.path),
-          }))}
+          defaultSelectedKeys={[pathname]}
+          defaultOpenKeys={defaultOpenKeys}
+          openKeys={defaultOpenKeys}
+          onOpenChange={setDefaultOpenKeys}
+          items={getMenuItems(menuItems)}
         />
       </Sider>
       <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
-        <Header style={{ 
-          padding: 0, 
+        <Header style={{
+          padding: 0,
           background: colorBgContainer,
           position: 'sticky',
           top: 0,
@@ -111,7 +143,7 @@ export default function MainLayout({
             }}
           />
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <div style={{ 
+            <div style={{
               padding: '0 24px',
               cursor: 'pointer',
               display: 'flex',
@@ -137,4 +169,6 @@ export default function MainLayout({
       </Layout>
     </Layout>
   );
-} 
+});
+
+export default MainLayout; 

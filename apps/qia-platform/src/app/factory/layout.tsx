@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 
-export default function UserLayout({
+export default function FactoryLayout({
   children,
 }: {
   children: React.ReactNode;
