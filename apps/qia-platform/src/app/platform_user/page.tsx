@@ -5,6 +5,7 @@ import { Table, Card, Button, Space, Tag, Form, Input, message, Popconfirm } fro
 import { PlusOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import http from '@/utils/http';
 import { API_PATHS } from '@/config/env';
+import UserForm from './components/UserForm';
 
 interface UserData {
   id: number;
@@ -24,6 +25,9 @@ interface QueryParams {
 export default function UserPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [data, setData] = useState<UserData[]>([]);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -99,6 +103,66 @@ export default function UserPage() {
     }
   };
 
+  // 打开新增用户弹窗
+  const showCreateModal = () => {
+    setEditingUser(null);
+    setIsModalVisible(true);
+  };
+
+  // 打开编辑用户弹窗
+  const showEditModal = (user: UserData) => {
+    setEditingUser(user);
+    setIsModalVisible(true);
+  };
+
+  // 关闭弹窗
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    setEditingUser(null);
+  };
+
+  // 提交表单
+  const handleSubmit = async (values: { username: string; mobile: string }) => {
+    try {
+      setFormLoading(true);
+      if (editingUser) {
+        // 编辑用户
+        await http.put(API_PATHS.USER.UPDATE(editingUser.id), values);
+        message.success('更新成功');
+      } else {
+        // 新增用户
+        await http.post(API_PATHS.USER.CREATE, values);
+        message.success('创建成功');
+      }
+      setIsModalVisible(false);
+      setEditingUser(null);
+      fetchData({
+        pageNum: pagination.current,
+        pageSize: pagination.pageSize,
+      });
+    } catch (error) {
+      console.error(editingUser ? '更新用户失败:' : '创建用户失败:', error);
+      message.error(editingUser ? '更新失败' : '创建失败');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  // 删除用户
+  const handleDelete = async (id: number) => {
+    try {
+      await http.delete(API_PATHS.USER.DELETE(id));
+      message.success('删除成功');
+      fetchData({
+        pageNum: pagination.current,
+        pageSize: pagination.pageSize,
+      });
+    } catch (error) {
+      console.error('删除用户失败:', error);
+      message.error('删除失败');
+    }
+  };
+
   const columns = [
     {
       title: 'UUID',
@@ -130,8 +194,7 @@ export default function UserPage() {
       key: 'action',
       render: (_: any, record: UserData) => (
         <Space size="middle">
-          <a>编辑</a>
-          <a>删除</a>
+          <a onClick={() => showEditModal(record)}>编辑</a>
           <Popconfirm
             title={`确定要${record.status ? '禁用' : '启用'}该用户吗？`}
             onConfirm={() => handleStatusChange(record.id, record.status)}
@@ -139,6 +202,14 @@ export default function UserPage() {
             cancelText="取消"
           >
             <a>{record.status ? '禁用' : '启用'}</a>
+          </Popconfirm>
+          <Popconfirm
+            title="确定要删除该用户吗？"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <a className="text-red-500 hover:text-red-600">删除</a>
           </Popconfirm>
         </Space>
       ),
@@ -149,7 +220,7 @@ export default function UserPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">平台用户管理</h1>
-        <Button type="primary" icon={<PlusOutlined />}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={showCreateModal}>
           添加用户
         </Button>
       </div>
@@ -189,6 +260,17 @@ export default function UserPage() {
           onChange={handleTableChange}
         />
       </Card>
+
+      <UserForm
+        open={isModalVisible}
+        loading={formLoading}
+        initialValues={editingUser ? {
+          username: editingUser.username,
+          mobile: editingUser.mobile,
+        } : undefined}
+        onCancel={handleCancel}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 } 
