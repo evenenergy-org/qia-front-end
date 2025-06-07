@@ -17,7 +17,7 @@ export default function MainLayout({
   const pathname = usePathname();
   const { isAuthenticated, token, initialized, initialize } = useAuthStore();
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer, borderRadiusLG, colorPrimary },
   } = theme.useToken();
 
   useEffect(() => {
@@ -39,14 +39,18 @@ export default function MainLayout({
       <Header style={{ 
         display: 'flex', 
         alignItems: 'center',
-        background: colorBgContainer,
-        borderBottom: '1px solid #f0f0f0',
-        padding: '0 24px'
+        background: colorPrimary,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+        padding: '0 24px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 1,
+        width: '100%'
       }}>
         <div style={{ 
           fontSize: '18px', 
           fontWeight: 'bold',
-          color: '#1890ff'
+          color: '#fff'
         }}>
           恰谷平台
         </div>

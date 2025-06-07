@@ -1,20 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import http from '@/utils/http';
+import { API_PATHS } from '@/config/env';
 
 interface User {
   id: number;
   username: string;
-  email: string;
+  mobile: string;
 }
 
-interface LoginResponse {
-  code: number;
-  message: string;
-  data: {
-    token: string;
-    user: User;
-  };
+interface LoginData {
+  token: string;
+  id: number;
+  username: string;
+  mobile: string;
+  expireTime: number;
 }
 
 interface AuthState {
@@ -36,22 +36,27 @@ export const useAuthStore = create<AuthState>()(
       initialized: false,
       login: async (username: string, password: string) => {
         try {
-          const response = await http.post<LoginResponse>('/api/auth/login', {
+          console.log('发送登录请求:', { username, password });
+          const { data } = await http.post<LoginData>(API_PATHS.LOGIN, {
             username,
             password,
           });
+          console.log('登录响应:', data);
 
-          if (response.data.code === 200 && response.data.data?.token) {
+          if (data?.token) {
+            const { token, id, username, mobile } = data;
+            console.log('登录成功，设置用户信息:', { token, id, username, mobile });
             set({
-              token: response.data.data.token,
-              user: response.data.data.user,
+              token,
+              user: { id, username, mobile },
               isAuthenticated: true,
             });
           } else {
-            throw new Error(response.data.message || '登录失败');
+            console.error('登录失败，响应数据:', data);
+            throw new Error('登录失败');
           }
         } catch (error) {
-          console.error('登录失败:', error);
+          console.error('登录失败，错误详情:', error);
           throw error;
         }
       },
