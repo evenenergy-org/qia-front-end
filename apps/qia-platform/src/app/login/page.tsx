@@ -14,7 +14,10 @@ export default function LoginPage() {
     try {
       await login(values.username, values.password);
       message.success('登录成功');
-      router.push('/');
+      // 添加一个小延迟，确保状态更新完成
+      setTimeout(() => {
+        router.push('/');
+      }, 100);
     } catch (error) {
       message.error('登录失败，请检查用户名和密码');
     }

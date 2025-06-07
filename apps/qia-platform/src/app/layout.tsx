@@ -1,13 +1,10 @@
-'use client';
-
-import { App as AntdApp } from 'antd';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import AntdRegistry from './AntdRegistry';
-import 'antd/dist/reset.css';
 import { ConfigProvider } from 'antd';
 import { theme } from '../theme';
 import { ThemeProvider } from './ThemeProvider';
+import ClientLayout from './ClientLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -27,20 +24,10 @@ export default function RootLayout({
         <ThemeProvider>
           <ConfigProvider
             theme={{
-              token: {
-                colorPrimary: theme.colorPrimary,
-                colorSuccess: theme.colorSuccess,
-                colorWarning: theme.colorWarning,
-                colorError: theme.colorError,
-                colorText: 'var(--color-text)',
-                fontSize: parseInt(theme.fontSizeBase, 10),
-                borderRadius: parseInt(theme.borderRadius, 10),
-              },
+              token: theme,
             }}
           >
-            <AntdApp>
-              <AntdRegistry>{children}</AntdRegistry>
-            </AntdApp>
+            <ClientLayout>{children}</ClientLayout>
           </ConfigProvider>
         </ThemeProvider>
       </body>
