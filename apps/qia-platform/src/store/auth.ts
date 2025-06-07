@@ -23,7 +23,7 @@ interface AuthState {
   isAuthenticated: boolean;
   initialized: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   initialize: () => void;
 }
 
@@ -60,12 +60,23 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
-      logout: () => {
-        set({
-          token: null,
-          user: null,
-          isAuthenticated: false,
-        });
+      logout: async () => {
+        try {
+          await http.post(API_PATHS.LOGOUT);
+          set({
+            token: null,
+            user: null,
+            isAuthenticated: false,
+          });
+        } catch (error) {
+          console.error('退出失败，错误详情:', error);
+          // 即使接口调用失败，也清除本地状态
+          set({
+            token: null,
+            user: null,
+            isAuthenticated: false,
+          });
+        }
       },
       initialize: () => {
         set({ initialized: true });
