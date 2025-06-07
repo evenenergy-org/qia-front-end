@@ -17,7 +17,6 @@ const MainLayout = memo(function MainLayout({
 }) {
   const router = useRouter();
   
-  console.log('rrrrr',router)
   const pathname = usePathname();
   const { isAuthenticated, token, initialized, initialize, user, logout } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
@@ -40,7 +39,6 @@ const MainLayout = memo(function MainLayout({
     const parentMenu = menuItems.find(item =>
       item.children?.some(child => child.path === pathname)
     );
-    console.log('初始化展开')
     setDefaultOpenKeys(parentMenu ? [parentMenu.path] : []);
   }, []);
 
