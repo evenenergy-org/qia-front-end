@@ -1,9 +1,15 @@
+'use client';
+
+import { App as AntdApp } from 'antd';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import AntdRegistry from './AntdRegistry';
 import 'antd/dist/reset.css';
 import { ConfigProvider } from 'antd';
 import { theme } from '../theme';
 import { ThemeProvider } from './ThemeProvider';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: '恰谷平台',
@@ -17,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body>
+      <body className={inter.className}>
         <ThemeProvider>
           <ConfigProvider
             theme={{
@@ -32,7 +38,9 @@ export default function RootLayout({
               },
             }}
           >
-            <AntdRegistry>{children}</AntdRegistry>
+            <AntdApp>
+              <AntdRegistry>{children}</AntdRegistry>
+            </AntdApp>
           </ConfigProvider>
         </ThemeProvider>
       </body>

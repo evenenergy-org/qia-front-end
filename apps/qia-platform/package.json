@@ -15,7 +15,9 @@
     "react-dom": "^18.2.0",
     "antd": "^5.14.1",
     "@ant-design/icons": "^5.3.0",
-    "@ant-design/cssinjs": "^1.23.0"
+    "@ant-design/cssinjs": "^1.23.0",
+    "axios": "^1.6.7",
+    "zustand": "^4.5.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
