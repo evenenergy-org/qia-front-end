@@ -1,6 +1,7 @@
 'use client';
 
-import { Form, Input, Button, message } from 'antd';
+import { useEffect } from 'react';
+import { Form, Input, Button, Card, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
@@ -8,25 +9,37 @@ import styles from './login.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { login, isAuthenticated, token, initialized, initialize } = useAuthStore();
+
+  useEffect(() => {
+    if (!initialized) {
+      initialize();
+    }
+  }, [initialized, initialize]);
+
+  useEffect(() => {
+    if (initialized && isAuthenticated && token) {
+      router.replace('/dashboard');
+    }
+  }, [initialized, isAuthenticated, token, router]);
 
   const onFinish = async (values: { username: string; password: string }) => {
     try {
       await login(values.username, values.password);
       message.success('登录成功');
-      // 添加一个小延迟，确保状态更新完成
-      setTimeout(() => {
-        router.push('/');
-      }, 100);
+      router.replace('/dashboard');
     } catch (error) {
       message.error('登录失败，请检查用户名和密码');
     }
   };
 
+  if (!initialized || (initialized && isAuthenticated && token)) {
+    return null;
+  }
+
   return (
     <div className={styles.container}>
-      <div className={styles.loginBox}>
-        <h1 className={styles.title}>系统登录</h1>
+      <Card className={styles.card} title="恰谷平台登录">
         <Form
           name="login"
           onFinish={onFinish}
@@ -53,7 +66,7 @@ export default function LoginPage() {
             </Button>
           </Form.Item>
         </Form>
-      </div>
+      </Card>
     </div>
   );
 } 
