@@ -20,7 +20,7 @@ export default function MainLayout({
   const { isAuthenticated, token, initialized, initialize, user, logout } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const {
-    token: { colorBgContainer, borderRadiusLG, colorPrimary },
+    token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
   useEffect(() => {
@@ -58,41 +58,28 @@ export default function MainLayout({
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider 
-        width={200} 
+        trigger={null} 
         collapsible 
         collapsed={collapsed}
-        onCollapse={setCollapsed}
-        style={{ 
-          background: colorBgContainer,
-          boxShadow: '2px 0 8px rgba(0, 0, 0, 0.15)',
+        style={{
+          overflow: 'auto',
           height: '100vh',
           position: 'fixed',
           left: 0,
           top: 0,
           bottom: 0,
-          zIndex: 1
         }}
-        trigger={null}
       >
         <div style={{ 
           height: '64px',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 24px',
-          background: colorPrimary,
-          color: '#fff',
-          fontSize: collapsed ? '14px' : '18px',
-          fontWeight: 'bold',
-          transition: 'all 0.2s',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap'
-        }}>
-          恰谷平台
-        </div>
+          margin: '16px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '6px',
+        }} />
         <Menu
+          theme="dark"
           mode="inline"
           selectedKeys={[pathname]}
-          style={{ height: 'calc(100% - 64px)', borderRight: 0 }}
           items={menuItems.map(item => ({
             key: item.path,
             icon: <item.icon />,
@@ -100,72 +87,49 @@ export default function MainLayout({
             onClick: () => router.push(item.path),
           }))}
         />
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 1,
-          width: '24px',
-          height: '24px',
-          background: colorBgContainer,
-          border: '1px solid #f0f0f0',
-          borderLeft: 'none',
-          borderRadius: '0 4px 4px 0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          boxShadow: '2px 0 8px rgba(0, 0, 0, 0.15)',
-          marginRight: '-1px'
-        }} onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <MenuUnfoldOutlined style={{ color: colorPrimary, fontSize: '14px' }} /> : <MenuFoldOutlined style={{ color: colorPrimary, fontSize: '14px' }} />}
-        </div>
       </Sider>
       <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
         <Header style={{ 
-          background: colorPrimary,
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-          padding: '0 24px',
+          padding: 0, 
+          background: colorBgContainer,
           position: 'sticky',
           top: 0,
-          zIndex: 0,
-          height: '64px',
+          zIndex: 1,
+          width: '100%',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end'
+          justifyContent: 'space-between',
         }}>
+          <Button
+            type="text"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{
+              fontSize: '16px',
+              width: 64,
+              height: 64,
+            }}
+          />
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <div style={{ 
-              color: '#fff',
-              fontSize: '14px',
+              padding: '0 24px',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              cursor: 'pointer',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              transition: 'all 0.3s',
-              backgroundColor: 'transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
+              gap: '8px',
             }}>
-              <UserOutlined style={{ marginRight: '8px' }} />
-              {user?.username}
+              <UserOutlined />
+              <span>{user?.username}</span>
             </div>
           </Dropdown>
         </Header>
         <Content
           style={{
-            padding: '24px',
-            margin: 0,
-            minHeight: 'calc(100vh - 64px)',
+            margin: '24px 16px',
+            padding: 24,
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+            minHeight: 280,
           }}
         >
           {children}
