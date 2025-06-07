@@ -11,15 +11,21 @@ export default function UserLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, initialized, initialize } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!initialized) {
+      initialize();
+    }
+  }, [initialized, initialize]);
+
+  useEffect(() => {
+    if (initialized && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [initialized, isAuthenticated, router]);
 
-  if (!isAuthenticated) {
+  if (!initialized || !isAuthenticated) {
     return null;
   }
 

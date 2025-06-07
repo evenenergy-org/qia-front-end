@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { API_BASE_URL } from '@/config/env';
+import { useAuthStore } from '@/store/auth';
 
 // 创建axios实例
 const http: AxiosInstance = axios.create({
@@ -13,17 +14,10 @@ const http: AxiosInstance = axios.create({
 // 请求拦截器
 http.interceptors.request.use(
   (config) => {
-    // 从localStorage获取token
-    const token = localStorage.getItem('auth-storage');
+    // 从store获取token
+    const token = useAuthStore.getState().token;
     if (token) {
-      try {
-        const { state } = JSON.parse(token);
-        if (state?.token) {
-          config.headers.Authorization = `Bearer ${state.token}`;
-        }
-      } catch (error) {
-        console.error('解析token失败:', error);
-      }
+      config.headers.Authorization = token;
     }
     return config;
   },
